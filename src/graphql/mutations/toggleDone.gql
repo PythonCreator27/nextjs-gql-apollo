@@ -1,0 +1,6 @@
+mutation ToggleDone($id: Int!, $done: Boolean!) {
+    updateTodo(id: $id, done: $done) {
+        id
+        done
+    }
+}
