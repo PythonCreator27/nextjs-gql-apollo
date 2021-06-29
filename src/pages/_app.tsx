@@ -1,22 +1,27 @@
 import type { AppProps } from 'next/app';
 import '../styles/tailwind.scss';
 import { NavBar } from '../components/Navigation/NavBar';
-import { useRouter } from 'next/router';
-import AuthContextProvider from '../authContext';
-import { ApolloWrapper } from '../components/Wrappers/ApolloWrapper';
-import { ErrorWrapper } from '../components/Wrappers/ErrorWrapper';
+import { ErrorWrapper } from '../components/ErrorWrapper';
 import ErrorContextProvider from '../errorContext';
+import { ApolloClient, HttpLink, InMemoryCache, ApolloProvider } from '@apollo/client';
+
+const client = new ApolloClient({
+    ssrMode: typeof window === 'undefined',
+    link: new HttpLink({
+        uri: process.env.NEXT_PUBLIC_API_URI || 'http://localhost:4000/graphql',
+        credentials: 'include',
+    }),
+    cache: new InMemoryCache(),
+});
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
     return (
         <ErrorContextProvider>
             <ErrorWrapper>
-                <AuthContextProvider>
-                    <ApolloWrapper>
-                        <NavBar />
-                        <Component {...pageProps} />
-                    </ApolloWrapper>
-                </AuthContextProvider>
+                <ApolloProvider client={client}>
+                    <NavBar />
+                    <Component {...pageProps} />
+                </ApolloProvider>
             </ErrorWrapper>
         </ErrorContextProvider>
     );

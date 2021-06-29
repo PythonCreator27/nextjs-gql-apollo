@@ -2,7 +2,6 @@ import { gql } from '@apollo/client';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
-import { AuthContext } from '../authContext';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Input } from '../components/Input';
 import Todo from '../components/Todo';
@@ -10,17 +9,6 @@ import { ErrorContext } from '../errorContext';
 import { useAddTodoMutation, useTodosQuery } from '../generated/gql';
 
 export const Home: NextPage = () => {
-    const router = useRouter();
-    const {
-        authState: { token },
-        triedAutoLogin,
-    } = useContext(AuthContext);
-
-    useEffect(() => {
-        if (triedAutoLogin && !token) {
-            router.replace('/login');
-        }
-    }, [router, token, triedAutoLogin]);
     const { loading, error, data } = useTodosQuery();
     const [addTodo] = useAddTodoMutation({
         update(cache, { data }) {
@@ -48,7 +36,7 @@ export const Home: NextPage = () => {
     const [newTodoText, setNewTodoText] = useState('');
     const { setError } = useContext(ErrorContext);
     if (loading) return <div>Loading...</div>;
-    if (error && triedAutoLogin) return <ErrorMessage message="Error loading todos." />;
+    if (error) return <ErrorMessage message="Error loading todos." />;
     return (
         <div className="container m-auto h-full">
             <h1 className="text-5xl text-center m-4 font-semibold">Your Todos</h1>

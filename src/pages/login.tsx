@@ -1,28 +1,37 @@
 import { NextPage } from 'next';
 import { useLoginMutation } from '../generated/gql';
 import { Formik, Form } from 'formik';
-import { ApolloError } from '@apollo/client';
+import { ApolloError, gql } from '@apollo/client';
 import FormInput from '../components/FormInput';
 import { Link } from '../components/Navigation/Link';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { useRouter } from 'next/router';
-import { AuthContext } from '../authContext';
 import { ErrorContext } from '../errorContext';
 
 export const Login: NextPage = () => {
-    const [login] = useLoginMutation();
-    const {
-        login: ctxLogin,
-        authState: { token },
-    } = useContext(AuthContext);
+    const [login] = useLoginMutation({
+        update: (cache, { data }) => {
+            if (data) {
+                cache.modify({
+                    fields: {
+                        me: () => {
+                            return cache.writeFragment({
+                                fragment: gql`
+                                    fragment NewMe on Me {
+                                        id
+                                        username
+                                    }
+                                `,
+                                data: data.login.user,
+                            });
+                        },
+                    },
+                });
+            }
+        },
+    });
     const { setError } = useContext(ErrorContext);
     const router = useRouter();
-
-    useEffect(() => {
-        if (token) {
-            router.push('/');
-        }
-    }, [token, router]);
 
     return (
         <>
@@ -33,11 +42,11 @@ export const Login: NextPage = () => {
                     try {
                         const { data } = await login({ variables: values });
                         if (data) {
-                            ctxLogin(data.login.token, data.login.user.id);
                             router.push('/');
                         }
                     } catch (err) {
                         if (err instanceof ApolloError) {
+                            console.log(err);
                             setError('Failed to login, check your credentials.');
                         } else {
                             throw err;

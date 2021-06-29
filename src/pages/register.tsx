@@ -3,24 +3,12 @@ import { useRegisterMutation } from '../generated/gql';
 import { Formik, Form } from 'formik';
 import { ApolloError } from '@apollo/client';
 import FormInput from '../components/FormInput';
-import { Link } from '../components/Link';
-import { useContext, useEffect } from 'react';
+import { Link } from '../components/Navigation/Link';
 import { useRouter } from 'next/router';
-import { AuthContext } from '../authContext';
 
 export const Register: NextPage = () => {
     const [register] = useRegisterMutation();
-    const {
-        login: ctxLogin,
-        authState: { token },
-    } = useContext(AuthContext);
     const router = useRouter();
-
-    useEffect(() => {
-        if (token) {
-            router.push('/');
-        }
-    }, [token, router]);
 
     return (
         <>
@@ -31,7 +19,6 @@ export const Register: NextPage = () => {
                     try {
                         const { data } = await register({ variables: values });
                         if (data) {
-                            ctxLogin(data.register.token, data.register.user.id);
                             router.push('/');
                         }
                     } catch (err) {
